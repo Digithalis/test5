@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mein TV App Projekt - Maximiert</title>
+    <style>
+        /* Grund-Setup: Entfernt Abstände und nutzt die volle Bildschirmhöhe */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            color: #fff;
+            height: 100vh;
+            overflow: hidden; /* Verhindert Scrollbalken auf der gesamten Webseite */
+        }
+
+        /* Das Haupt-Layout teilt den Bildschirm in zwei Bereiche */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* LINKER BEREICH: Genau 1/8 der Gesamtbreite (12.5%) */
+        .sidebar {
+            width: 12.5%;
+            min-width: 150px; /* Verhindert, dass es auf kleinen Bildschirmen zu eng wird */
+            background-color: #262626;
+            padding: 15px 10px;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #333;
+            flex-shrink: 0;
+        }
+
+        .sidebar h2 {
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #aaa;
+        }
+
+        /* Scrollbarer Bereich für die Buttons */
+        .button-list {
+            flex-grow: 1;
+            overflow-y: auto; /* Aktiviert den vertikalen Scrollbalken */
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+        }
+
+        /* Styling der Scrollleiste */
+        .button-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .button-list::-webkit-scrollbar-track {
+            background: #262626;
+        }
+        .button-list::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 3px;
+        }
+        .button-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Design für die einzelnen Sender-Buttons */
+        .stream-btn {
+            background-color: #3a3a3a;
+            color: white;
+            border: 1px solid #444;
+            padding: 12px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-align: left;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis; 
+        }
+
+        .stream-btn:hover {
+            background-color: #4a4a4a;
+            border-color: #007bff;
+        }
+
+        .stream-btn.active {
+            background-color: #007bff;
+            border-color: #0056b3;
+            font-weight: bold;
+        }
+
+        /* RECHTER BEREICH: Maximiert auf die volle restliche Fläche (7/8) ohne Abstände */
+        .main-window {
+            flex-grow: 1;
+            background-color: #000; /* Schwarz als Hintergrund für den Fernseher */
+            height: 100%;
+        }
+
+        /* Das Video füllt das komplette rechte Fenster vollständig aus */
+        #tv-screen {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Behält das originale Video-Seitenverhältnis bei */
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- Linke Seite: Buttons mit Dummy-Links (data-stream) -->
+        <aside class="sidebar">
+            <h2>Sender</h2>
+            <div class="button-list" id="playlist-container">
+                <!-- Ersetze die Dummy-Links unten einfach durch deine echten .m3u8-Links -->
+                <button class="stream-btn" data-stream="https://stream01.welocal.stream/stream/fhd-allgaeutv_25679/ngrp:stream_all/playlist.m3u8">Das Erste</button>
+                <button class="stream-btn" data-stream="https://www.zdf.de/">ZDF</button>
+                <button class="stream-btn" data-stream="https://www1.wdr.de/">WDR</button>
+                <button class="stream-btn" data-stream="https://stream02.welocal.stream/stream/fhd-augsburgtv_104951/ngrp:stream_all/playlist.m3u8">NDR</button>
+                <button class="stream-btn" data-stream="https://muc3.iptv-playoutcenter.de/dokusat/dokusat1/playlist.m3u8">RTL</button>
+                <button class="stream-btn" data-stream="https://stream8.cinerama.uz/1418/tracks-v1a1/mono.m3u8">ProSieben</button>
+                <button class="stream-btn" data-stream="https://mdrtvsnhls.akamaized.net/hls/live/2016928/mdrtvsn/index.m3u8">Sat.1</button>
+                <button class="stream-btn" target="_blank" data-stream="https://digithalis.github.io/matrixpiano">VOX</button>
+                <button class="stream-btn" data-stream="https://tagesschau.akamaized.net/hls/live/2020115/tagesschau/tagesschau_1/master.m3u8">Arte</button>
+                <button class="stream-btn" data-stream="https://google.de">3sat</button>
+            </div>
+        </aside>
+
+        <!-- Rechte Seite: Maximiertes Hauptfenster (Fernseher) -->
+        <main class="main-window">
+            <video id="tv-screen" controls autoplay muted></video>
+        </main>
+
+    </div>
+
+    <script>
+        // JAVASCRIPT FÜR DIE BUTTON-STEUERUNG
+        const buttons = document.querySelectorAll('.stream-btn');
+        const video = document.getElementById('tv-screen');
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Aktiven Zustand bei allen Knöpfen entfernen
+                document.querySelectorAll('.stream-btn').forEach(b => b.classList.remove('active'));
+                
+                // Geklickten Knopf aktivieren
+                button.classList.add('active');
+                
+                // Stream-Link auslesen und im Video-Player starten
+                const streamUrl = button.getAttribute('data-stream');
+                video.src = streamUrl;
+                video.play().catch(err => console.log("Stream-Start abgefangen (ggf. noch kein gültiger Link):", err));
+            });
+        });
+    </script>
+</body>
+</html>
